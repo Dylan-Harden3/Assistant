@@ -9,13 +9,14 @@ attrs==24.2.0
 bidict==0.23.1
 black==24.8.0
 certifi==2024.8.30
-chainlit==1.1.404
+chainlit==1.2.0
 charset-normalizer==3.3.2
 chevron==0.14.0
 click==8.1.7
 colorama==0.4.6
-dataclasses-json==0.5.14
+dataclasses-json==0.6.7
 Deprecated==1.2.14
+distro==1.9.0
 fastapi==0.110.3
 filetype==1.2.0
 frozenlist==1.4.1
@@ -27,10 +28,12 @@ httpcore==1.0.5
 httpx==0.27.2
 idna==3.8
 importlib_metadata==8.4.0
+jiter==0.5.0
 jsonpatch==1.33
 jsonpointer==3.0.0
 langchain==0.2.16
 langchain-core==0.2.39
+langchain-openai==0.1.24
 langchain-text-splitters==0.2.4
 langsmith==0.1.117
 Lazify==0.4.0
@@ -40,6 +43,7 @@ multidict==6.1.0
 mypy-extensions==1.0.0
 nest-asyncio==1.6.0
 numpy==1.26.4
+openai==1.45.0
 opentelemetry-api==1.27.0
 opentelemetry-exporter-otlp==1.27.0
 opentelemetry-exporter-otlp-proto-common==1.27.0
@@ -62,6 +66,7 @@ python-engineio==4.9.1
 python-multipart==0.0.9
 python-socketio==5.11.4
 PyYAML==6.0.2
+regex==2024.9.11
 requests==2.32.3
 setuptools==74.1.2
 simple-websocket==1.0.0
@@ -70,7 +75,9 @@ SQLAlchemy==2.0.34
 starlette==0.37.2
 syncer==2.0.3
 tenacity==8.5.0
+tiktoken==0.7.0
 tomli==2.0.1
+tqdm==4.66.5
 typing-inspect==0.9.0
 typing_extensions==4.12.2
 uptrace==1.26.0

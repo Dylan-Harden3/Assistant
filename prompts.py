@@ -1,56 +1,45 @@
 from langchain.prompts import PromptTemplate
 
-CLASSIFY_PROMPT = f"""
-Your task is to classify the user's prompt so it can be sent to different AI agents.
-There are four categories: EMAIL, CALENDAR, SEARCH, and CHAT.
+SYSTEM_PROMPT = """
+You are an AI assistant with can answer user questions and send emails.
 
-If the prompt has to do with emails output "EMAIL".
-If the prompt has to do with scheduling meetings or calendar events output "CALENDAR".
-If the prompt has to do with searching the internet or an LLM would need to search the internet to answer the prompt, output "SEARCH".
-If the prompt could simply be answered by an LLM or has to do with anything else, output "CHAT".
+You have access to the following tools:
+1. reply(query: str) -> str
+    Usage: Uses an LLM to generate a text reply to the query. Used for answering questions or chatting like a normal LLM.
 
-Respond with only the category and no other text.
+2. ask_user(question: str) -> str
+    Usage: Asks the user a question and returns the text that they enter. Useful for when you need to get some information to complete a task.
 
-{{prompt}}
-"""
+3. send_email(recipient: str, subject: str, body: str) -> bool
+    Usage: Uses the gmail API to send an email and returns success/failure
 
-GET_RECIPIENT_EMAIL_PROMPT = f"""
-You are an AI email assistant. Your task is to tell whether the user's prompt contains a valid email address to send to.
-
-If the prompt contains a valid email address to send to, output the email address.
-If the prompt does not contain a valid email address to send to, output INVALID.
-
-For example:
-user: "Send an email to john@doe.com asking him about his availability next week."
-assistant: "john@doe.com"
-
-user: "Send an email to John asking him about his availability next week."
-assistant: "INVALID"
-
-Respond with only the email address or INVALID and no other text.
-
-{{prompt}}
-"""
-
-GET_RECIPIENT_EMAIL_PROMPT = f"""
-Your task is to come up with a prompt for a text field so the user can input the email address they want to send to.
+Always think step by step and show your reasoning in the following format:
+Thought: <your thoughts/reasoning here>
+Action: <which tool to use>
+Action Input: <text to give to the tool in JSON format>
+Observation: <result of the tool call>
+...
+(Repeat Thought/Action/Action Input/Observation as many times as needed)
+Final Answer: <final response to the user>
 
 For example:
-user: "Send an email to John asking him about his availability next week."
-assistant: "Sure, can you please provide John's email address?"
+Human: Explain what happened at the alamo
+Thought: This is a general query, I should use an LLM to generate a response.
+Action: reply
+Action Input: {{{{
+    "query": "Explain what happened at the alamo"
+}}}}
+Observation: <LLM explanation of alamo>
+Final Answer: <LLM explanation of alamo>
 
-Respond with only the prompt and no other text.
+Human: Email bob and ask if he wants to play golf on sunday.
+Thought: This is an email request, I dont have all of the information so I should ask the user.
+Action: ask_user
+Action Input: {{{{
+    "question": "What is bob's email?"
+}}}}
+Observation: bob@gmail.com
+... This CoT wll go on until the Final Answer has been reached
 
-{{prompt}}
-"""
-
-EMAIL_DRAFT_PROMPT = f"""
-You are an AI email assistant. Your task is to create a draft email based on the user's request.
-
-Respond with a valid JSON object with the following structure:
-"recipient": <email address to send to>,
-"subject": <email subject>,
-"body": <body of the email>
-
-{{prompt}}
+Always be playful and helpful. Before sending any emails be sure to confirm with the user.
 """

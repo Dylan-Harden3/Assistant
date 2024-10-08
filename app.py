@@ -5,9 +5,13 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain.schema.runnable.config import RunnableConfig
-from prompts import CLASSIFY_PROMPT
+from prompts import SYSTEM_PROMPT
+from typing import cast
+from langchain.schema.runnable import Runnable
 
 load_dotenv()
+
+model = ChatOpenAI(model="gpt-4o-mini")
 
 @cl.oauth_callback
 def oauth_callback(
@@ -22,14 +26,10 @@ def oauth_callback(
 
 @cl.on_chat_start
 async def on_chat_start():
-    model = ChatOpenAI(streaming=True)
     prompt = ChatPromptTemplate.from_messages(
         [
-            (
-                "system",
-                "You are a helpful AI assistant.",
-            ),
-            ("human", CLASSIFY_PROMPT),
+            ("system", SYSTEM_PROMPT),
+            ("user", "{question}")
         ]
     )
     runnable = prompt | model | StrOutputParser()
@@ -37,15 +37,11 @@ async def on_chat_start():
 
 @cl.on_message
 async def on_message(message: cl.Message):
-    runnable = cl.user_session.get("runnable")
+    runnable = cast(Runnable, cl.user_session.get("runnable"))
 
     msg = cl.Message(content="")
-
-    agent = await runnable.ainvoke({"prompt": message.content})
-
-    
     async for chunk in runnable.astream(
-        {"prompt": message.content},
+        {"question": message.content},
         config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()]),
     ):
         await msg.stream_token(chunk)
