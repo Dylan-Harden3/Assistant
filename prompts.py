@@ -21,11 +21,11 @@ Final Answer: "What is the recipients email address?"
 or
 Thought: From the conversation I can see all the information I need to send this email and the user wants me to send it.
 Action: send_email
-Action Input: {{{{
+Action Input: {
     "recipient": "user@gmail.com",
     "subject": "email subject",
     "body": "hi this is an email body"
-}}}}
+}
 
 After you run a tool, you will notice "Tool Result: <result of tool call>" appended to your previous message.
 For example for the send_email tool:
