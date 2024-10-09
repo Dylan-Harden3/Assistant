@@ -4,7 +4,7 @@ from typing import Optional
 
 TOOL_CALL_PATTERN = re.compile(r"Action: (.*?)\nAction Input: ({.*})", re.DOTALL)
 
-FINAL_RESPONSE_PATTERN = re.compile(r"Final Answer: (.*?)(?:\n|$)", re.DOTALL)
+FINAL_RESPONSE_PATTERN = re.compile(r"Final Answer: (.*)", re.DOTALL)
 
 
 def parse_llm_response(response: str) -> Optional[dict]:
@@ -15,11 +15,12 @@ def parse_llm_response(response: str) -> Optional[dict]:
         try:
             action_input_dict = json.loads(action_input)
             return {
-                "type": "action",
+                "type": "tool",
                 "action": action,
                 "action_input": action_input_dict,
             }
         except json.JSONDecodeError:
+            print("JSON DECODING ERROR")
             return None
 
     response_match = FINAL_RESPONSE_PATTERN.search(response)
