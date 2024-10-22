@@ -1,6 +1,5 @@
 import chainlit as cl
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.chat_history import (
@@ -9,11 +8,20 @@ from langchain_core.chat_history import (
 )
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.messages import HumanMessage, AIMessage
-from prompts import SYSTEM_PROMPT
 from typing import cast
 from langchain.schema.runnable import Runnable
 from utils import parse_llm_response
-from tools import EmailTool, GoogleSearch
+from tools import (
+    Email,
+    Search,
+    CreateEvent,
+    ReadCalendar,
+    UpdateEvent,
+    DeleteEvent,
+    GetDate,
+)
+from prompts import get_system_prompt
+from langchain_openai import ChatOpenAI
 
 MAX_ATTEMPTS = 3
 store = {}
@@ -44,14 +52,27 @@ async def add_tool_result(session_id: str, tool_text: str):
         return
 
     store[session_id].clear()
-    messages[-1].content += f"\nTool Result: {tool_text}"
+    messages[-1].content += f"\nObservation: {tool_text}"
     await store[session_id].aadd_messages(messages)
 
 
 load_dotenv()
 
+# model = ollama.Ollama(model=os.getenv("OLLAMA_MODEL"))
 model = ChatOpenAI(model="gpt-4o-mini")
-tools = {"send_email": EmailTool(), "google_search": GoogleSearch()}
+
+tools = [
+    Email(),
+    Search(),
+    CreateEvent(),
+    ReadCalendar(),
+    UpdateEvent(),
+    DeleteEvent(),
+    GetDate(),
+]
+name_to_tool = {tool.name: tool for tool in tools}
+SYSTEM_PROMPT = get_system_prompt(tools)
+# print(SYSTEM_PROMPT)
 
 
 @cl.on_chat_start
@@ -72,33 +93,34 @@ async def on_message(message: cl.Message):
     while (
         not action or (action and action["type"] == "tool")
     ) and attempts < MAX_ATTEMPTS:
-        print("AT START")
-        print(get_session_history(cl.user_session.get("id")))
+        # print("AT START")
+        # print(get_session_history(cl.user_session.get("id")))
         if attempts == 0:
             llm_response = await runnable.ainvoke(
                 [HumanMessage(content=message.content)],
                 config={"configurable": {"session_id": cl.user_session.get("id")}},
             )
+            attempts += 1
         else:
             llm_response = await runnable.ainvoke(
                 [], config={"configurable": {"session_id": cl.user_session.get("id")}}
             )
-        print(llm_response)
+        # print(llm_response)
         action = parse_llm_response(llm_response)
-        attempts += 1
         if not action:
+            attempts += 1
             await remove_last_message(
                 cl.user_session.get("id")
-            )  # if it didnt provide valid input remove that message from the history
+            )  # if it didn't provide valid input remove that message from the history
             continue
+        attempts = 1
         if action["type"] == "tool":
-            res = tools[action["action"]].run(**action["action_input"])
+            res = name_to_tool[action["action"]].run(**action["action_input"])
             await add_tool_result(cl.user_session.get("id"), res)
-
         elif action["type"] == "response":
             await cl.Message(content=action["response"]).send()
-        print("AT END")
-        print(get_session_history(cl.user_session.get("id")))
+        # print("AT END")
+        # print(get_session_history(cl.user_session.get("id")))
 
     if not action:
         await cl.Message(

@@ -7,7 +7,10 @@ import json
 
 # source: https://developers.google.com/gmail/api/quickstart/python
 def setup_credentials():
-    SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+    SCOPES = [
+        "https://www.googleapis.com/auth/gmail.send",
+        "https://www.googleapis.com/auth/calendar",
+    ]
     creds = None
     if os.path.exists("token.json"):
         with open("token.json", "r") as token:

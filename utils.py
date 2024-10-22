@@ -1,6 +1,7 @@
 import re
 import json
 from typing import Optional
+from datetime import datetime
 
 TOOL_CALL_PATTERN = re.compile(r"Action: (.*?)\nAction Input: ({.*})", re.DOTALL)
 
@@ -11,6 +12,8 @@ def parse_llm_response(response: str) -> Optional[dict]:
     tool_match = TOOL_CALL_PATTERN.search(response)
     if tool_match:
         action = tool_match.group(1).strip()
+        if "(" in action:
+            action = action[: action.index("(")]
         action_input = tool_match.group(2).strip()
         try:
             action_input_dict = json.loads(action_input)
@@ -29,3 +32,11 @@ def parse_llm_response(response: str) -> Optional[dict]:
         return {"type": "response", "response": final_answer}
 
     return None
+
+
+def check_iso_format(date_time: str) -> bool:
+    try:
+        datetime.strptime(date_time, "%Y-%m-%dT%H:%M:%S")
+        return True
+    except ValueError:
+        return False
