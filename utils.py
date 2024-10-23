@@ -2,6 +2,8 @@ import re
 import json
 from typing import Optional
 from datetime import datetime
+import tiktoken
+import pdfplumber
 
 TOOL_CALL_PATTERN = re.compile(r"Action: (.*?)\nAction Input: ({.*})", re.DOTALL)
 
@@ -40,3 +42,21 @@ def check_iso_format(date_time: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+def count_tokens(text: str) -> int:
+    try:
+        encoding = tiktoken.encoding_for_model("gpt-4o-mini")
+        tokens = encoding.encode(text)
+        return len(tokens)
+    except Exception:
+        return 0
+
+
+def read_pdf(path: str) -> str:
+    pdf_text = []
+    with pdfplumber.open(path) as pdf:
+        for page in pdf.pages:
+            pdf_text.append(page.extract_text())
+            pdf_text.append("\n")
+    return "\n".join(pdf_text)

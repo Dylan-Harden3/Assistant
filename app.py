@@ -10,7 +10,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.messages import HumanMessage, AIMessage
 from typing import cast
 from langchain.schema.runnable import Runnable
-from utils import parse_llm_response
+from utils import parse_llm_response, count_tokens, read_pdf
 from tools import (
     Email,
     Search,
@@ -22,6 +22,7 @@ from tools import (
 )
 from prompts import get_system_prompt
 from langchain_openai import ChatOpenAI
+from rag import rag_pipeline
 
 MAX_ATTEMPTS = 3
 store = {}
@@ -84,12 +85,25 @@ async def on_chat_start():
     with_message_history = RunnableWithMessageHistory(runnable, get_session_history)
     cl.user_session.set("runnable", with_message_history)
 
-
 @cl.on_message
 async def on_message(message: cl.Message):
+
+    pdf_text = []
+    if message.elements:
+        for el in message.elements:
+            pdf_text.append(read_pdf(el.path))
+    
+        pdf_text = "".join(pdf_text)
+        pdf_text = rag_pipeline(pdf_text, message.content)
+
     runnable = cast(Runnable, cl.user_session.get("runnable"))
     action = None
     attempts = 0
+    prompt = message.content
+
+    if pdf_text:
+        prompt = pdf_text + "\n\n" + message.content
+
     while (
         not action or (action and action["type"] == "tool")
     ) and attempts < MAX_ATTEMPTS:
@@ -97,7 +111,7 @@ async def on_message(message: cl.Message):
         # print(get_session_history(cl.user_session.get("id")))
         if attempts == 0:
             llm_response = await runnable.ainvoke(
-                [HumanMessage(content=message.content)],
+                [HumanMessage(content=prompt)],
                 config={"configurable": {"session_id": cl.user_session.get("id")}},
             )
             attempts += 1
@@ -120,7 +134,7 @@ async def on_message(message: cl.Message):
         elif action["type"] == "response":
             await cl.Message(content=action["response"]).send()
         # print("AT END")
-        # print(get_session_history(cl.user_session.get("id")))
+        print(get_session_history(cl.user_session.get("id")))
 
     if not action:
         await cl.Message(
