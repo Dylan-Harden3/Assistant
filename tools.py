@@ -92,7 +92,7 @@ class CreateEvent(Tool):
         super().__init__(
             name="create_event",
             description="Inserts an event into the Humans calendar with a summary, start_time, end_time and optional location, attendees list and time_zone. start_time and end_time must be in ISO format (YYYY-MM-DDTHH:MM:SS).",
-            usage="create_event(summary: str, start_time: str, end_time: str, location: Optional[str]=None, attendees: Optional[List[str]]=None, time_zone: str='UTC')",
+            usage="create_event(summary: str, start_time: str, end_time: str, location: Optional[str]=None, attendees: Optional[List[str]]=None, time_zone: str='America/Chicago')",
         )
         self.calendar_service = get_calendar_service()
 
@@ -103,7 +103,7 @@ class CreateEvent(Tool):
         end_time: str,
         location: Optional[str] = None,
         attendees: Optional[List[str]] = None,
-        time_zone: str = "UTC",
+        time_zone: str = "America/Chicago",
     ) -> str:
         if not summary or not start_time or not end_time:
             return "Error in create_event:  summary, start_time and end_time must be provided."
@@ -186,86 +186,6 @@ class ReadCalendar(Tool):
 
         except googleapiclient.errors.HttpError as e:
             return f"Error in read_calendar: {e}."
-
-
-class UpdateEvent(Tool):
-    def __init__(self):
-        super().__init__(
-            name="update_event",
-            description="Updates an event on the Humans calendar given an event_id and optionally summary, start_time, end_time, location, attendees and time_zone. If start_time and end_time are provided they must be in ISO format (YYYY-MM-DDTHH:MM:SS).",
-            usage="update_event(event_id: str, summary: Optional[str] = None, start_time: Optional[str] = None, end_time: Optional[str] = None, location: Optional[str] = None, attendees: Optional[List[str]] = None, time_zone: Optional[str] = None)",
-        )
-        self.calendar_service = get_calendar_service()
-
-    def run(
-        self,
-        event_id: str,
-        summary: Optional[str] = None,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
-        location: Optional[str] = None,
-        attendees: Optional[List[str]] = None,
-        time_zone: Optional[str] = None,
-    ):
-        try:
-            event = (
-                self.calendar_service.events()
-                .get(calendarId="primary", eventId=event_id)
-                .execute()
-            )
-            prev_start_time = event["start"].get("dateTime")
-            prev_end_time = event["end"].get("dateTime")
-
-            if summary:
-                event["summary"] = summary
-            if start_time and end_time:
-                if not check_iso_format(start_time) or not check_iso_format(end_time):
-                    return "Error in update_event: start_time and end_time must be in ISO format (YYYY-MM-DDTHH:MM:SS)."
-                if datetime.fromisoformat(start_time) >= datetime.fromisoformat(
-                    end_time
-                ):
-                    return "Error in update_event: start_time must be before end_time."
-                event["start"]["dateTime"] = start_time
-                event["end"]["dateTime"] = end_time
-            elif start_time:
-                if not check_iso_format(start_time):
-                    return "Error in update_event: start_time must be in ISO format (YYYY-MM-DDTHH:MM:SS)."
-                if prev_end_time and datetime.fromisoformat(
-                    start_time
-                ) >= datetime.fromisoformat(prev_end_time):
-                    return f"Error in update_event: new start_time {start_time} must be before the end_time: {prev_end_time}."
-                event["start"]["dateTime"] = start_time
-            elif end_time:
-                if not check_iso_format(end_time):
-                    return "Error in update_event: end_time must be in ISO format (YYYY-MM-DDTHH:MM:SS)."
-                if prev_start_time and datetime.fromisoformat(
-                    prev_start_time
-                ) >= datetime.fromisoformat(end_time):
-                    return f"Error in update_event: new end_time {end_time} must be after the start time {prev_start_time}."
-                event["end"]["dateTime"] = end_time
-
-            if time_zone:
-                event["start"]["timeZone"] = time_zone
-                event["end"]["timeZone"] = time_zone
-            if location:
-                event["location"] = location
-            if attendees:
-                event["attendees"] = [{"email": email} for email in attendees]
-
-            updated_event = (
-                self.calendar_service.events()
-                .update(calendarId="primary", eventId=event_id, body=event)
-                .execute()
-            )
-            return f"Event updated successfully: {updated_event['htmlLink']}"
-
-        except googleapiclient.errors.HttpError as e:
-            if e.resp.status == 404:
-                return f"Error in update_event: event with id {event_id} not found."
-            elif e.resp.status == 409:
-                return "Error in update_event: The new time has a conflict with another event on the Humans calendar."
-            return f"Error in update_event: {e}."
-
 
 class DeleteEvent(Tool):
     def __init__(self):

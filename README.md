@@ -29,13 +29,9 @@ pip install -r requirements.txt
 1. Create a `.env` file in the project root directory with the following keys:
 ```
 OPENAI_API_KEY=<your_openai_api_key_here>
+OLLAMA_MODEL="llama3.2"
+MASK_PRIVATE_DATA=False
 ```
-2. Generate a chainlit auth token:
-```
-chainlit create-secret
-```
-and copy the output into `.env`
-
 ## 🚀 Running the Application
 ```
 chainlit run app.py

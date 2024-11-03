@@ -5,13 +5,13 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import json
 
 
-# source: https://developers.google.com/gmail/api/quickstart/python
 def setup_credentials():
     SCOPES = [
         "https://www.googleapis.com/auth/gmail.send",
         "https://www.googleapis.com/auth/calendar",
     ]
     creds = None
+
     if os.path.exists("token.json"):
         with open("token.json", "r") as token:
             creds_data = json.load(token)
@@ -21,7 +21,9 @@ def setup_credentials():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-            creds = flow.run_local_server(port=8080)
+            creds = flow.run_local_server(
+                port=8080, access_type="offline", prompt="consent"
+            )
         with open("token.json", "w") as token:
             token.write(creds.to_json())
 

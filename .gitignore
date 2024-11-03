@@ -5,3 +5,4 @@ client_secret_*
 credentials.json
 token*
 .ruff_cache
+.files/
