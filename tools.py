@@ -187,6 +187,7 @@ class ReadCalendar(Tool):
         except googleapiclient.errors.HttpError as e:
             return f"Error in read_calendar: {e}."
 
+
 class DeleteEvent(Tool):
     def __init__(self):
         super().__init__(

@@ -62,39 +62,3 @@ You will be penalized if you send any emails or schedule calendar events without
 Never include the Observations in your response, they will be added automatically.
 """
     return prompt
-
-
-MASK_SENSITIVE_INFO_PROMPT = """
-You are an assistant for maintaining sensitive data privacy.
-Given a Human's prompt, your task is to:
-1. Find any super private sensitive information in the prompt.
-2. Replace all of the sensitive information with unique placeholders.
-3. Return a JSON object with the masked prompt (key masked_prompt) as well as a mapping of each placeholder to its original sensitive text.
-
-You only need to mask extremely sensitive/private personal information.
-
-For example:
-Human: Send an email to Alice.
-AI: {"masked_text": "Send an email to [NAME].", "[NAME]": "Alice"}
-or
-Human: What meetings do I have next thursday?
-AI: {"masked_text": "What meetings do I have next [DAY]", "[DAY]": "thursday"}
-or
-Human: Hey whats up?
-AI: {"masked_text": "Hey whats up?"}
-
-Always end your message with the JSON object containing the masked prompt as well as all keys and their mapping.
-Try to maintain the semantic meaning of the prompt when masking.
-Only mask super private data, you can leave all non private information in the prompt.
-If you do not mask anything just return the masked_text key as the original prompt.
-
-Human's Prompt:
-
-"""
-
-PRIVATE_PDF_PROMPT = """
-You are given some chunks of PDFs as well as a users prompt. Using the chunks as well as your knowledge base respond to the users prompt.
-
-Chunks + Human's Prompt:
-
-"""
